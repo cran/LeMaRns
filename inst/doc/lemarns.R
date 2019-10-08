@@ -43,7 +43,7 @@ g_eff <- tmp$g_eff
 mature <- calc_mature(Lmat, nfish, mid, kappa=rep(10, nfish), sc_Linf)
 
 ## ------------------------------------------------------------------------
-other <- 1e12
+other <- NS_other
 
 ## ---- echo=FALSE, fig.width=4, fig.height=3.5, fig.align="center"--------
 x <- seq(1, 1e10, length.out=10000)
@@ -51,7 +51,7 @@ SSB <- x/1e9 # SSB in tonnes x 10^3
 y <- 1.5*SSB*exp(-0.5*SSB)*1e6
 plot(x/1e6, y, ylab="Recruits", xlab="SSB (tonnes)", type="l", main="Ricker", ylim=c(0, 1.1e6))
 
-## ---- echo=FALSE, fig.height=6.5, fig.align="center"---------------------
+## ---- echo=FALSE, fig.height=6.5,fig.width=7, fig.align="center"---------
 x <- seq(1, 1e10, length.out=10000)
 SSB <- x/1e9 # SSB in tonnes x 10^3
 par(mfrow=c(2, 2))
@@ -67,7 +67,7 @@ plot(x/1e6, rep(hs_b, length(x))*1e6, ylab="Recruits", xlab="SSB (tonnes)", type
 stored_rec_funs <- get_rec_fun(rep("hockey-stick", nfish))
 recruit_params <- do.call("Map", c(c, list(a=NS_par$a, b=NS_par$b)))
 
-## ---- echo=FALSE, fig.height=3, fig.align="center"-----------------------
+## ---- echo=FALSE, fig.height=3, fig.width=7, fig.align="center"----------
 x <- seq(0, 125, 1)
 y <- ifelse(x<0.75*125, 0, 0.8)
 par(mfrow=c(1, 3))
@@ -127,7 +127,7 @@ NS_params <- new("LeMans_param",
                   wgt=wgt,
                   phi=phi,
                   ration=ration,
-                  other=1e12,
+                  other=other,
                   M1=M1,
                   suit_M2=suit_M2,
                   Qs=Qs,
@@ -143,15 +143,15 @@ NS_params <- LeMansParam(species_names=NS_par$species_names,
                          eta=rep(0.25, 21), L50=Lmat)
 
 ## ---- eval=FALSE---------------------------------------------------------
-#  NS_params <- LeMansParam(NS_par, tau=NS_tau, eta=rep(0.25, 21), L50=NS_par$Lmat, other=1e12)
+#  NS_params <- LeMansParam(NS_par, tau=NS_tau, eta=rep(0.25, 21), L50=NS_par$Lmat, other=NS_other)
 
 ## ---- echo=FALSE---------------------------------------------------------
-NS_params <- LeMansParam(NS_par, tau=NS_tau, eta=rep(0.25, 21), L50=NS_par$Lmat, other=1e12)
+NS_params <- LeMansParam(NS_par, tau=NS_tau, eta=rep(0.25, 21), L50=NS_par$Lmat, other=NS_other)
 
 ## ---- eval=FALSE---------------------------------------------------------
 #  N <- get_N0(nsc, nfish, mid, wgt, sc_Linf, intercept=1e10, slope=-5)
 
-## ---- echo=FALSE---------------------------------------------------------
+## ---- echo=FALSE,fig.height=6.5,fig.width=7,fig.align="center"-----------
 N <- get_N0(nsc, nfish, mid, wgt, sc_Linf, intercept=1e10, slope=-5)
 par(mfrow=c(1,1), mar=c(5,5,5,0))
 layout(matrix(c(1,1,1,2,1,1,1,2,1,1,1,2), nrow=3, byrow=TRUE))
@@ -213,8 +213,8 @@ model_run <- run_LeMans(N0=N0, tot_time=tot_time, Fs=Fs, nsc=nsc, nfish=nfish, p
 model_run <- run_LeMans(NS_params, N0=N0, Fs=Fs, tot_time=tot_time)
 
 ## ------------------------------------------------------------------------
-effort <- matrix(0.5, years, dim(Qs)[3])
-model_run <- run_LeMans(NS_params, years=50, effort=effort)
+effort_mat <- matrix(0.5, years, dim(Qs)[3])
+model_run <- run_LeMans(NS_params, years=50, effort=effort_mat)
 
 ## ---- eval=FALSE---------------------------------------------------------
 #  biomass <- get_biomass(N=N, wgt=wgt)
@@ -235,18 +235,18 @@ model_run <- run_LeMans(NS_params, years=50, effort=effort)
 ## ---- eval=FALSE---------------------------------------------------------
 #  plot_biomass(inputs=NS_params, outputs=model_run, time_steps=1:500, species=1:21)
 
-## ---- echo=FALSE---------------------------------------------------------
+## ---- echo=FALSE,fig.height=5,fig.width=7,fig.align="center"-------------
 plot_biomass(inputs=NS_params, outputs=model_run, time_steps=1:500, species=1:21)
 
 ## ---- eval=FALSE---------------------------------------------------------
-#  biomass <- get_biomass(inputs=NS_params, outputs=NS_params)
+#  biomass <- get_biomass(inputs=NS_params, outputs=model_run)
 #  plot_biomass(biomass=biomass, time_steps=1:500, species=1:4)
 
-## ------------------------------------------------------------------------
+## ---- eval=TRUE,fig.height=5,fig.width=7,fig.align="center"--------------
 plot_biomass(inputs=NS_params, outputs=model_run, time_steps=1:500, species=1:4, 
              full_plot_only=FALSE)
 
-## ------------------------------------------------------------------------
+## ----fig.height=5,fig.width=7,fig.align="center"-------------------------
 SSB <- get_SSB(inputs=NS_params, outputs=model_run, time_steps=1:500, species=1:21)
 plot_SSB(SSB=SSB, time_steps=1:500, species=1:21, species_names=NS_params@species_names)
 
@@ -294,7 +294,7 @@ plot_LQ(inputs=NS_params, outputs=model_run, time_steps=1:500, species=1:21,
 #                  time_steps=1:500, species=1:21,
 #                  length_LFI=c(30, 40), prob=c(0.5, 0.95))
 
-## ---- eval=TRUE, echo=FALSE, fig.height=6--------------------------------
+## ---- eval=TRUE, echo=FALSE,fig.height=5,fig.width=7,fig.align="center"----
 plot_indicators(inputs=NS_params, outputs=model_run, time_steps=1:500, species=1:21, 
                 length_LFI=c(30, 40), prob=c(0.5, 0.95))
 
@@ -303,20 +303,20 @@ plot_indicators(inputs=NS_params, outputs=model_run, time_steps=1:500, species=1
 #  CPG <- get_CPG(inputs=NS_params, outputs=model_run, time_steps=1:500, species=1:21)
 
 ## ------------------------------------------------------------------------
-mixed_fish
+NS_mixed_fish
 
 ## ------------------------------------------------------------------------
-NS_params <- LeMansParam(df=NS_par, gdf = mixed_fish, tau=NS_tau, eta=eta, L50=L50, other=1e12)
+NS_params <- LeMansParam(df=NS_par, gdf = NS_mixed_fish, tau=NS_tau, eta=NS_eta, L50=NS_L50, other=NS_other)
 
 ## ------------------------------------------------------------------------
-effort <- matrix(0, 50, dim(NS_params@Qs)[3])
-colnames(effort) <- c("Industrial", "Otter", "Beam", "Pelagic")
-model_run <- run_LeMans(NS_params, years=50, effort=effort)
+effort_mat <- matrix(0, 50, dim(NS_params@Qs)[3])
+colnames(effort_mat) <- c("Industrial", "Otter", "Beam", "Pelagic")
+model_run <- run_LeMans(NS_params, years=50, effort=effort_mat)
 
-## ------------------------------------------------------------------------
+## ----fig.height=5,fig.width=7,fig.align="center"-------------------------
 plot_SSB(inputs=NS_params, outputs=model_run, full_plot_only=TRUE)
 
-## ---- fig.height=6-------------------------------------------------------
+## ----fig.height=5,fig.width=7,fig.align="center"-------------------------
 plot_indicators(inputs=NS_params, outputs=model_run)
 
 ## ------------------------------------------------------------------------
@@ -328,10 +328,10 @@ efs <- expand.grid(Industrial=ef_lvl, Otter=ef_lvl, Beam=ef_lvl, Pelagic=ef_lvl)
 
 ## ------------------------------------------------------------------------
 run_the_model<- function(ef){
-  effort <- matrix(ef, 50, dim(NS_params@Qs)[3], byrow=T)
-  colnames(effort) <- c("Industrial", "Otter", "Beam", "Pelagic")
+  effort_mat <- matrix(ef, 50, dim(NS_params@Qs)[3], byrow=T)
+  colnames(effort_mat) <- c("Industrial", "Otter", "Beam", "Pelagic")
   model_run <- run_LeMans(params=NS_params, N0=model_run@N[,,501], 
-                          years=50, effort=effort)
+                          years=50, effort=effort_mat)
   return(model_run)
 }
 
@@ -349,7 +349,7 @@ load("sce.rda")
 #  MML <- unlist(lapply(lapply(sce, FUN=get_MML, time_steps=492:501, inputs=NS_params),
 #                       mean))
 
-## ---- eval=T, fig.height=6-----------------------------------------------
+## ---- eval=T,fig.height=5,fig.width=7,fig.align="center"-----------------
 par(mfrow=c(2, 2))
 boxplot(LFI~efs[, 1], main="Industrial", xlab="Effort", ylab="LFI")
 boxplot(LFI~efs[, 2], main="Otter", xlab="Effort", ylab="LFI")
@@ -376,7 +376,7 @@ boxplot(MML~efs[, 4], main="Pelagic", xlab="Effort", ylab="MML")
 #  rel_SSB <- t(t(new_SSB)/v_SSB)
 #  colnames(rel_SSB) <- NS_params@species_names
 
-## ---- eval=T, fig.height=6-----------------------------------------------
+## ---- eval=T,fig.height=5,fig.width=7,fig.align="center"-----------------
 par(mfrow=c(2,2))
 boxplot(rel_SSB[, "Saithe"]~efs[, 1], main="Industrial", xlab="Effort",
         ylab="Relative SSB")
@@ -387,7 +387,7 @@ boxplot(rel_SSB[, "Saithe"]~efs[, 3], main="Beam", xlab="Effort",
 boxplot(rel_SSB[, "Saithe"]~efs[, 4], main="Pelagic", xlab="Effort",
         ylab="Relative SSB")
 
-## ---- eval=T, fig.height=6-----------------------------------------------
+## ---- eval=T ,fig.height=5,fig.width=7,fig.align="center"----------------
 par(mfrow=c(2,2))
 boxplot(rel_SSB[, "Horse mackerel"]~efs[, 1], main="Industrial", xlab="Effort",
         ylab="Relative SSB")
@@ -398,7 +398,7 @@ boxplot(rel_SSB[, "Horse mackerel"]~efs[, 3], main="Beam", xlab="Effort",
 boxplot(rel_SSB[, "Horse mackerel"]~efs[, 4], main="Pelagic", xlab="Effort",
         ylab="Relative SSB")
 
-## ---- eval=F-------------------------------------------------------------
+## ---- ,fig.height=5,fig.width=7,fig.align="center",eval=F----------------
 #  risk <- apply(rel_SSB, 1, function(x){return(sum(x<0.1))})
 #  
 #  par(mfrow=c(2, 2))
@@ -407,7 +407,7 @@ boxplot(rel_SSB[, "Horse mackerel"]~efs[, 4], main="Pelagic", xlab="Effort",
 #  boxplot(risk~efs[, 3], main="Beam", xlab="Effort", ylab="Stocks at risk")
 #  boxplot(risk~efs[, 4], main="Pelagic", xlab="Effort", ylab="Stocks at risk")
 
-## ---- eval=T, fig.height=6-----------------------------------------------
+## ---- eval=T, fig.height=5,fig.width=7,fig.align="center"----------------
 z_mat <- outer(ef_lvl, ef_lvl, FUN=function(x, y, efs) {
   mapply(function(x, y, efs) {
   mean(risk[intersect(which(efs[, 2]==x), which(efs[, 3]==y))])}, x=x, y=y,
@@ -422,7 +422,7 @@ image(z=-matrix(sort(unique(as.numeric(z_mat))), nrow=1),
 axis(2); box()
 box()
 
-## ---- fig.height=6-------------------------------------------------------
+## ----fig.height=5,fig.width=7,fig.align="center"-------------------------
 Industrial <- rep(1.5, 20)
 Otter <- -1/100*1:20*(1:20-20)
 Beam <- 1:20*1/20+0.25
@@ -439,31 +439,31 @@ plot(1:20, Pelagic, ylab="Effort", main="Pelagic", xlab="Year",
 
 ## ------------------------------------------------------------------------
 # Set up effort for the model run
-effort <- cbind(Industrial, Otter, Beam, Pelagic)
-colnames(effort) <- c("Industrial", "Otter", "Beam", "Pelagic")
+effort_mat <- cbind(Industrial, Otter, Beam, Pelagic)
+colnames(effort_mat) <- c("Industrial", "Otter", "Beam", "Pelagic")
 model_run_dyn <- run_LeMans(params=NS_params, N0=model_run@N[,,501],
-                            years=20, effort=effort)
+                            years=20, effort=effort_mat)
 catches <- get_annual_catch(inputs=NS_params, outputs=model_run_dyn)/1e6 # in tonnes
 colnames(catches) <- NS_params@species_names
 
-## ---- fig.height=6-------------------------------------------------------
+## ----fig.height=5,fig.width=7,fig.align="center"-------------------------
 par(mfrow=c(2, 2))
-plot(1:20, catches[, "Sprat"], type="l", main="Sprat", xlab="Years", 
+plot(1:20, catches[, "Sprat"], type="l", main="Sprat", xlab="Year", 
      ylab="Catch (tonnes)", ylim=c(0, max(catches[, "Sprat"])))
-plot(1:20, catches[, "Cod"], type="l", main="Cod", xlab="Years", 
+plot(1:20, catches[, "Cod"], type="l", main="Cod", xlab="Year", 
      ylab="Catch (tonnes)", ylim=c(0, max(catches[, "Cod"])))
-plot(1:20, catches[, "Sole"], type="l", main="Sole", xlab="Years", 
+plot(1:20, catches[, "Sole"], type="l", main="Sole", xlab="Year", 
      ylab="Catch (tonnes)", ylim=c(0,max(catches[, "Sole"])))
-plot(1:20, catches[, "Herring"], type="l", main="Herring", xlab="Years", 
+plot(1:20, catches[, "Herring"], type="l", main="Herring", xlab="Year", 
      ylab="Catch (tonnes)", ylim=c(0, max(catches[, "Herring"])))
 
-## ------------------------------------------------------------------------
+## ---- eval = T,fig.height=5,fig.width=7,fig.align="center"---------------
 plot_SSB(inputs=NS_params, outputs=model_run_dyn, 
          species=c("Sprat", "Cod", "Sole", "Herring"), 
          full_plot_only=FALSE)
 
-## ---- fig.height=6-------------------------------------------------------
-catch_per_gear <- get_CPG(inputs=NS_params, outputs=model_run_dyn, effort=effort)
+## ----fig.height=5,fig.width=7,fig.align="center"-------------------------
+catch_per_gear <- get_CPG(inputs=NS_params, outputs=model_run_dyn, effort=effort_mat)
 tot_pg <- apply(catch_per_gear, c(2, 3), sum)/1e6
 year <- rep(1:20, each=10)
 # Total catch per gear per year
@@ -485,8 +485,8 @@ plot(1:20, tot_pgpy[, 3], type="l", ylim=c(0, max(tot_pgpy[, 3])), xlab="Year",
 plot(1:20, tot_pgpy[, 4], type="l", ylim=c(0, max(tot_pgpy[, 4])), xlab="Year", 
      main="Pelagic", ylab="Catch (tonnes)")
 
-## ---- fig.height=6-------------------------------------------------------
-CPUE <- get_CPUE(inputs=NS_params, outputs=model_run_dyn, effort=effort)/1e6
+## ----fig.height=5,fig.width=7,fig.align="center"-------------------------
+CPUE <- get_CPUE(inputs=NS_params, outputs=model_run_dyn, effort=effort_mat)/1e6
 cpue_py <- t(sapply(1:20, function(x, year){
   tele <- which(year==x)
   if (length(tele)>1){
@@ -498,13 +498,13 @@ cpue_py <- t(sapply(1:20, function(x, year){
 colnames(cpue_py) <- NS_params@species_names
 
 par(mfrow=c(2, 2))
-plot(1:20, cpue_py[, "Sprat"], type="l", main="Sprat", xlab="Years", 
+plot(1:20, cpue_py[, "Sprat"], type="l", main="Sprat", xlab="Year", 
      ylab="CPUE (tonnes)", ylim=c(0, max(cpue_py[, "Sprat"])))
-plot(1:20, cpue_py[, "Cod"], type="l", main="Cod", xlab="Years", 
+plot(1:20, cpue_py[, "Cod"], type="l", main="Cod", xlab="Year", 
      ylab="CPUE (tonnes)", ylim=c(0, max(cpue_py[, "Cod"])))
-plot(1:20, cpue_py[, "Sole"], type="l", main="Sole", xlab="Years", 
+plot(1:20, cpue_py[, "Sole"], type="l", main="Sole", xlab="Year", 
      ylab="CPUE (tonnes)", ylim=c(0, max(cpue_py[, "Sole"])))
-plot(1:20, cpue_py[, "Herring"], type="l", main="Herring", xlab="Years", 
+plot(1:20, cpue_py[, "Herring"], type="l", main="Herring", xlab="Year", 
      ylab="CPUE (tonnes)", ylim=c(0, max(cpue_py[, "Herring"])))
 
 ## ------------------------------------------------------------------------
@@ -515,29 +515,29 @@ rec_fish$max_catchability <- c(0.01, 0.01, 0.005, 0.05, 0.05, 0.01, 0.01, 0.02)
 Lmin <- c(35, 30, 20, 15, 30, 27, 35, 27)
 
 ## ------------------------------------------------------------------------
-gdf <- rbind(mixed_fish, rec_fish)
+gdf <- rbind(NS_mixed_fish, rec_fish)
 
 ## ------------------------------------------------------------------------
-eta1 <- c(eta, rep(0, 8))
-L501 <- c(L50, rep(0, 8))
+eta1 <- c(NS_eta, rep(0, 8))
+L501 <- c(NS_L50, rep(0, 8))
 Lmin1 <- c(rep(0, 21), Lmin)
 
 ## ------------------------------------------------------------------------
 NS_params_rec <- LeMansParam(df=NS_par, gdf = gdf, tau=NS_tau, eta=eta1, L50=L501, 
-                             other=1e12, Lmin=Lmin1)
-effort1 <- cbind(effort, 0.1+1:20*0.05/20)
-colnames(effort1)[5] <- "Recreational"
+                             other=NS_other, Lmin=Lmin1)
+effort_mat1 <- cbind(effort_mat, 0.1+1:20*0.05/20)
+colnames(effort_mat1)[5] <- "Recreational"
 
 ## ---- fig.width=5.5, fig.height=4, fig.align="center"--------------------
-plot(1:20, effort1[, "Recreational"], xlab="Years", ylab="Effort", type="l", 
+plot(1:20, effort_mat1[, "Recreational"], xlab="Years", ylab="Effort", type="l", 
      ylim=c(0, 2), main="Recreational")
 
 ## ------------------------------------------------------------------------
 model_run_rec <- run_LeMans(params=NS_params_rec, N0=model_run@N[,,501], 
-                            years=20, effort=effort1)
+                            years=20, effort=effort_mat1)
 
-## ---- fig.height=6-------------------------------------------------------
-catch_per_gear_rec <- get_CPG(inputs=NS_params_rec, outputs=model_run_rec, effort=effort1)
+## ---- fig.height=5,fig.width=7,fig.align="center"------------------------
+catch_per_gear_rec <- get_CPG(inputs=NS_params_rec, outputs=model_run_rec, effort=effort_mat1)
 rec_py <- t(sapply(1:20, function(x, year){
   tele <- which(year==x)
   if (length(tele)>1){
@@ -548,17 +548,17 @@ rec_py <- t(sapply(1:20, function(x, year){
 colnames(rec_py) <- NS_params_rec@species_names
 
 par(mfrow=c(2, 2))
-plot(1:20, rec_py[, "Herring"], type="l", main="Herring", xlab="Years", 
+plot(1:20, rec_py[, "Herring"], type="l", main="Herring", xlab="Year", 
      ylab="Catch (tonnes)")
-plot(1:20, rec_py[, "Mackerel"], type="l", main="Horse mackerel", xlab="Years", 
+plot(1:20, rec_py[, "Mackerel"], type="l", main="Horse mackerel", xlab="Year", 
      ylab="Catch (tonnes)")
-plot(1:20, rec_py[, "Cod"], type="l", main="Cod", xlab="Years", 
+plot(1:20, rec_py[, "Cod"], type="l", main="Cod", xlab="Year", 
      ylab="Catch (tonnes)")
-plot(1:20 ,rec_py[, "Saithe"], type="l", main="Saithe", xlab="Years", 
+plot(1:20 ,rec_py[, "Saithe"], type="l", main="Saithe", xlab="Year", 
      ylab="Catch (tonnes)")
 
 ## ----eval=T--------------------------------------------------------------
-NS_params_n <- LeMansParam(NS_par, tau=NS_tau, eta=eta, L50=L50, other=1e12)
+NS_params_n <- LeMansParam(NS_par, tau=NS_tau, eta=NS_eta, L50=NS_L50, other=NS_other)
 model_run_n_init <- run_LeMans(NS_params_n, years=50)
 # Set the initial state
 N0 <- model_run_n_init@N[,,501]
@@ -586,7 +586,7 @@ calc_catch<-function(x,i,eff){
 load("nash.rda")
 msy <- run_LeMans(NS_params_n, N0=N0, years=20, effort=matrix(fmsy_lm, nrow=20, ncol=21, byrow=T))
 
-## ----eval=T--------------------------------------------------------------
+## ----eval=T,fig.height=5,fig.width=7,fig.align="center"------------------
 nash <- run_LeMans(NS_params_n, N0=N0, years=20, effort=matrix(eff, nrow=20, ncol=21, byrow=T))
 plot_SSB(inputs=NS_params_n, outputs=nash)
 
